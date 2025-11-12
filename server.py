@@ -1,4 +1,4 @@
-from flask import Flask, send_file, abort, jsonify
+from flask import Flask, send_file, abort, jsonify, request
 import json
 import os
 import time
@@ -66,6 +66,27 @@ def download_file(token):
         )
     except Exception as e:
         return jsonify({'error': 'Failed to serve file'}), 500
+
+@app.route('/api/create-token', methods=['POST'])
+def create_token():
+    """API endpoint for bot to create tokens"""
+    data = request.get_json()
+    
+    token = data.get('token')
+    file_path = data.get('path')
+    expiry = data.get('expiry')
+    
+    if not token or not file_path or not expiry:
+        return jsonify({'error': 'Missing data'}), 400
+    
+    tokens = load_tokens()
+    tokens[token] = {
+        'path': file_path,
+        'expiry': expiry
+    }
+    save_tokens(tokens)
+    
+    return jsonify({'success': True, 'token': token})
 
 @app.route('/health')
 def health():
